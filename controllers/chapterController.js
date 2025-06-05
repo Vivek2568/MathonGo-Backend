@@ -21,7 +21,7 @@ exports.getAllChapters = async (req, res) => {
     const total = await Chapter.countDocuments(query);
 
     const result = { total, chapters };
-    await redisClient.set(key, JSON.stringify(result), { EX: 3600 }); // ✅ cache for 1 hour
+    await redisClient.set(key, JSON.stringify(result), { EX: 3600 }); 
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
