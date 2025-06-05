@@ -23,27 +23,28 @@ async function setupRateLimiter() {
     points: 1000,
     duration: 60,
     keyPrefix: 'middleware',
+    skip: (req, res) => true
   });
 
   return async function rateLimitMiddleware(req, res, next) {
     const ip = getClientIP(req);
     console.log("Resolved IP:", ip);
+    return next();
+    // if (['127.0.0.1', '::1', '::ffff:127.0.0.1', 'unknown'].includes(ip)) {
+    //   console.warn("Skipping rate limit for:", ip);
+    //   return next();
+    // }
 
-    if (['127.0.0.1', '::1', '::ffff:127.0.0.1', 'unknown'].includes(ip)) {
-      console.warn("Skipping rate limit for:", ip);
-      return next();
-    }
+    // try {
+    //   console.log("hello lakshay");
+    //   await rateLimiter.consume(ip);
+    //   next();
 
-    try {
-      console.log("hello lakshay");
-      await rateLimiter.consume(ip);
-      next();
-
-    } catch (rejRes) {
-      const retrySecs = Math.round((rejRes.msBeforeNext || 0) / 1000) || 60;
-      res.set('Retry-After', retrySecs);
-      res.status(429).send(`Too Many Requests. Try again in ${retrySecs}s.`);
-    }
+    // } catch (rejRes) {
+    //   const retrySecs = Math.round((rejRes.msBeforeNext || 0) / 1000) || 60;
+    //   res.set('Retry-After', retrySecs);
+    //   res.status(429).send(`Too Many Requests. Try again in ${retrySecs}s.`);
+    // }
   };
 }
 

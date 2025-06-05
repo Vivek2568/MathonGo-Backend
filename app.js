@@ -14,6 +14,7 @@ async function startServer() {
     const rateLimiter = await setupRateLimiter();
     console.log("✅ RateLimiter initialized");
 
+
     app.use(rateLimiter);
     app.use("/api/v1/chapters", chapterRoutes);
     app.use(errorHandler);
@@ -21,4 +22,4 @@ async function startServer() {
 
 startServer();
 
-module.exports=app;
+module.exports = app;
