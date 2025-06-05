@@ -13,7 +13,7 @@ app.use(cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+console.log("rateLimiter is called");
 app.use(rateLimiter);
 app.use("/api/v1/chapters", chapterRoutes);
 app.use(errorHandler);
