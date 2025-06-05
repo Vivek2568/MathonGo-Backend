@@ -20,7 +20,7 @@ async function setupRateLimiter() {
   await connectRedis();
   rateLimiter = new RateLimiterRedis({
     storeClient: redisClient,
-    points: 30,
+    points: 1000,
     duration: 60,
     keyPrefix: 'middleware',
   });
@@ -35,8 +35,10 @@ async function setupRateLimiter() {
     }
 
     try {
+      console.log("hello lakshay");
       await rateLimiter.consume(ip);
       next();
+
     } catch (rejRes) {
       const retrySecs = Math.round((rejRes.msBeforeNext || 0) / 1000) || 60;
       res.set('Retry-After', retrySecs);
