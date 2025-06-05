@@ -41,11 +41,12 @@ exports.getChapterById = async (req, res) => {
 exports.uploadChapters = async (req, res) => {
   try {
     let chapters = req.body;
+    // console.log(req.body);
 
     if (!Array.isArray(chapters)) {
       chapters = [chapters];
     }
-    // console.log(chapters);
+  //   console.log(chapters);
     const valid = [], invalid = [];
 
     for (let data of chapters) {

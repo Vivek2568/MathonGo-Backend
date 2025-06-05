@@ -19,7 +19,10 @@ A RESTful API backend built using **Node.js**, **Express**, **MongoDB**, and **R
   Note: On the frontend, you can apply filters using the /api/v1/chapters endpoint to get a list of relevant chapters. Each item in the response includes its unique MongoDB _id, which you can use to fetch full details of a specific chapter using the /api/v1/chapters/:id endpoint.
 
 - `POST /api/v1/chapters` *(Admin only)*  
-  Upload a new chapter with validation.
+  - Upload a new chapter with validation.
+  - please make sure to add in req.headers
+    - admin = true 
+    - Content-Type = application/json
 
 ## 🛠️ Setup Instructions
 
