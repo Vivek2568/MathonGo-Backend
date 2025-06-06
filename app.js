@@ -11,7 +11,6 @@ app.set('trust proxy', true);
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-console.log("hello priyanshi");
 app.get('/health', async (req, res) => {
     try {
         const redisStatus = redisClient.isOpen ? 'connected' : 'disconnected';
