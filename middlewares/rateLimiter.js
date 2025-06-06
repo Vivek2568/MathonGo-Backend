@@ -1,51 +1,47 @@
 const { RateLimiterRedis } = require('rate-limiter-flexible');
 const { redisClient, connectRedis } = require('../config/redis');
 
-let rateLimiter;
-
-function getClientIP(req) {
-  const cfConnectingIP = req.headers['cf-connecting-ip'];
-  const xForwardedFor = req.headers['x-forwarded-for'];
-  return (
-    cfConnectingIP ||
-    (xForwardedFor && xForwardedFor.split(',')[0].trim()) ||
-    req.ip ||
-    req.connection?.remoteAddress ||
-    req.socket?.remoteAddress ||
-    'unknown'
-  );
-}
-
 async function setupRateLimiter() {
-  await connectRedis();
-  rateLimiter = new RateLimiterRedis({
-    storeClient: redisClient,
-    points: 1000,
-    duration: 60,
-    keyPrefix: 'middleware',
-    skip: (req, res) => true
-  });
+  try {
+    await connectRedis();
+    
+    const rateLimiter = new RateLimiterRedis({
+      storeClient: redisClient,
+      points: 100, 
+      duration: 60,
+      keyPrefix: 'middleware',
+    });
 
-  return async function rateLimitMiddleware(req, res, next) {
-    const ip = getClientIP(req);
-    console.log("Resolved IP:", ip);
-    // return next();
-    if (['127.0.0.1', '::1', '::ffff:127.0.0.1', 'unknown'].includes(ip)) {
-      console.warn("Skipping rate limit for:", ip);
-      return next();
-    }
+    return async function rateLimitMiddleware(req, res, next) {
+      if (process.env.NODE_ENV === 'development') {
+        return next();
+      }
 
-    try {
-      console.log("hello lakshay");
-      await rateLimiter.consume(ip);
-      next();
+      const ip = req.headers['x-forwarded-for'] || 
+                 req.headers['x-real-ip'] || 
+                 req.connection.remoteAddress;
 
-    } catch (rejRes) {
-      const retrySecs = Math.round((rejRes.msBeforeNext || 0) / 1000) || 60;
-      res.set('Retry-After', retrySecs);
-      res.status(429).send(`Too Many Requests. Try again in ${retrySecs}s.`);
-    }
-  };
+      try {
+        await rateLimiter.consume(ip);
+        next();
+      } catch (error) {
+        if (error.remainingPoints !== undefined) {
+          const retrySecs = Math.round(error.msBeforeNext / 1000) || 60;
+          res.set('Retry-After', String(retrySecs));
+          res.status(429).json({
+            error: 'Too Many Requests',
+            message: `Try again in ${retrySecs} seconds`
+          });
+        } else {
+          console.error('Rate limiter error:', error);
+          next();
+        }
+      }
+    };
+  } catch (error) {
+    console.error('Rate limiter setup failed:', error);
+    return (req, res, next) => next();
+  }
 }
 
 module.exports = setupRateLimiter;
